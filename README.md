@@ -65,6 +65,26 @@ The mTLS broker exchanges authenticated device context for short-lived access to
 
 ---
 
+mermaid```
+flowchart TB
+    Device["Managed Device\n(Private Key + Cert)"]
+
+    Broker["mTLS Token Broker\n(Device Auth)"]
+    IdP["Keycloak\n(Token Issuer)"]
+
+    ServiceA["Cloud Service A"]
+    ServiceB["Cloud Service B"]
+
+    Device -->|mTLS| Broker
+    Broker -->|OAuth2 Backend Flow| IdP
+    IdP -->|JWT Access Token| Broker
+    Broker -->|JWT| Device
+
+    Device -->|JWT| ServiceA
+    Device -->|JWT| ServiceB
+```
+
+
 ## 5. Authentication and Authorization Flow
 
 1. A device establishes an mTLS connection to the token broker.
@@ -136,3 +156,45 @@ This architecture enables future enhancements, including:
 
 This proposal modernizes device authentication while fully leveraging existing trust infrastructure. By combining mTLS-based device authentication with centralized token brokering and Keycloak-based identity management, the organization gains a secure, scalable, and future-proof foundation for cloud access and federated authorization.
 
+
+mermaid```
+sequenceDiagram
+    participant D as Device
+    participant B as mTLS Token Broker
+    participant K as Keycloak
+    participant S as Cloud Service
+
+    D->>B: mTLS connection + device cert
+    B->>B: Validate cert, CA chain, revocation
+    B->>K: OAuth request (device context)
+    K-->>B: Signed JWT (scoped, short-lived)
+    B-->>D: Access token
+    D->>S: Request + JWT
+    S->>S: Validate signature & claims
+    S-->>D: Authorized response
+```
+
+mermaid```
+flowchart LR
+    subgraph Device_Trust["Device Trust Domain"]
+        DeviceCert["Device Certificate"]
+        DeviceKey["Private Key"]
+    end
+
+    subgraph AuthN["Authentication"]
+        Broker["mTLS Token Broker"]
+    end
+
+    subgraph AuthZ["Authorization"]
+        Keycloak
+    end
+
+    subgraph Services["Application Services"]
+        API
+    end
+
+    DeviceCert --> Broker
+    DeviceKey --> Broker
+    Broker --> Keycloak
+    Keycloak --> API
+```
