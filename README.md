@@ -65,7 +65,8 @@ The mTLS broker exchanges authenticated device context for short-lived access to
 
 ---
 
-mermaid```
+mermaid
+```
 flowchart TB
     Device["Managed Device\n(Private Key + Cert)"]
 
@@ -157,7 +158,8 @@ This architecture enables future enhancements, including:
 This proposal modernizes device authentication while fully leveraging existing trust infrastructure. By combining mTLS-based device authentication with centralized token brokering and Keycloak-based identity management, the organization gains a secure, scalable, and future-proof foundation for cloud access and federated authorization.
 
 
-mermaid```
+mermaid
+```
 sequenceDiagram
     participant D as Device
     participant B as mTLS Token Broker
@@ -174,7 +176,8 @@ sequenceDiagram
     S-->>D: Authorized response
 ```
 
-mermaid```
+mermaid
+```
 flowchart LR
     subgraph Device_Trust["Device Trust Domain"]
         DeviceCert["Device Certificate"]
