@@ -8,10 +8,15 @@ This section describes the primary trust boundaries, assets, and threats associa
 
 ```mermaid
 flowchart LR
-    Device[Managed Device\n(Device Cert + Private Key)]
-    Broker[mTLS Token Broker]
-    IdP[Keycloak\nIdentity Provider]
-    Services[Cloud Services]
+    subgraph Untrusted_Network["Untrusted Network"]
+        Device["Managed Device<br/>(Device Cert + Private Key)"]
+        Services["Cloud Services"]
+    end
+
+    subgraph Trusted_Cloud["Trusted Cloud Environment"]
+        Broker["mTLS Token Broker"]
+        IdP["Keycloak<br/>Identity Provider"]
+    end
 
     Device -->|mTLS| Broker
     Broker -->|Token Exchange| IdP
@@ -19,12 +24,4 @@ flowchart LR
     Broker -->|JWT Access Token| Device
     Device -->|Bearer Token| Services
 
-    subgraph Untrusted_Network["Untrusted Network"]
-        Device
-        Services
-    end
-
-    subgraph Trusted_Cloud["Trusted Cloud Environment"]
-        Broker
-        IdP
-    end
+```
