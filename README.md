@@ -65,7 +65,6 @@ The mTLS broker exchanges authenticated device context for short-lived access to
 
 ---
 
-
 ```mermaid
 flowchart TB
     Device["Managed Device\n(Private Key + Cert)"]
@@ -84,7 +83,6 @@ flowchart TB
     Device -->|JWT| ServiceA
     Device -->|JWT| ServiceB
 ```
-
 
 ## 5. Authentication and Authorization Flow
 
@@ -157,7 +155,7 @@ This architecture enables future enhancements, including:
 
 This proposal modernizes device authentication while fully leveraging existing trust infrastructure. By combining mTLS-based device authentication with centralized token brokering and Keycloak-based identity management, the organization gains a secure, scalable, and future-proof foundation for cloud access and federated authorization.
 
-
+---
 
 ```mermaid
 sequenceDiagram
@@ -175,7 +173,6 @@ sequenceDiagram
     S->>S: Validate signature & claims
     S-->>D: Authorized response
 ```
-
 
 ```mermaid
 flowchart LR
@@ -202,6 +199,8 @@ flowchart LR
     Keycloak --> API
 ```
 
+---
+
 ## How This Helps Us
 
 This architecture provides clear benefits across three key use cases:
@@ -224,32 +223,52 @@ This architecture provides clear benefits across three key use cases:
 - The token broker and Keycloak handle **federated authentication**, issuing tokens scoped to the customer’s identity and permissions.
 - Ensures separation of trust: our device never sees the user’s raw credentials.
 
-### Integrated Flow Diagram
+### Use Case Flow Diagrams
+
+#### 1. Centralized Device Authentication Flow
 
 ```mermaid
 flowchart TB
-    subgraph Devices["Managed Devices"]
-        Device["Device\n(Private Key + Cert)"]
-        CCFApp["CCF Application"]
-        CustomerApp["Customer App"]
-    end
-
+    Device["Device\n(Private Key + Cert)"]
     Broker["mTLS Token Broker\n(Device Auth)"]
     IdP["Keycloak\n(Token Issuer)"]
-    CloudServices["Cloud Services & Internal Tools"]
+    CloudServices["Cloud Services & Internal Tools\n(Email, Uploads, Tools)"]
 
-    %% Centralized Device Authentication
-    Device -->|mTLS Auth| Broker
+    Device -->|mTLS Authentication| Broker
+    Broker -->|OAuth2 Backend Flow| IdP
+    IdP -->|JWT Access Token| Broker
     Broker -->|JWT Tokens| Device
     Device -->|Token Access| CloudServices
+```
 
-    %% App-Level Delegation
+#### 2. App-Level Delegation for CCF Applications
+
+```mermaid
+flowchart TB
+    CCFApp["CCF Application\n(on Device)"]
+    Broker["mTLS Token Broker\n(Device Auth)"]
+    IdP["Keycloak\n(Token Issuer)"]
+    CloudServices["Cloud Services"]
+
     CCFApp -->|Uses Device Cert to Request Token| Broker
+    Broker -->|OAuth2 Backend Flow| IdP
+    IdP -->|Scoped JWT Token| Broker
     Broker -->|Scoped Token| CCFApp
     CCFApp -->|Token Access| CloudServices
+```
 
-    %% Federated Credentials
-    CustomerApp -->|Federated Login| Broker
+#### 3. Federated Credentials for Customer Apps
+
+```mermaid
+flowchart TB
+    CustomerApp["Customer App\n(on Device)"]
+    Broker["mTLS Token Broker\n(Device Auth)"]
+    IdP["Keycloak\n(Token Issuer)"]
+    CloudServices["Cloud Services"]
+
+    CustomerApp -->|Federated Login Request| Broker
+    Broker -->|Federated Auth Flow| IdP
+    IdP -->|Customer-Scoped JWT Token| Broker
     Broker -->|Customer-Scoped Token| CustomerApp
     CustomerApp -->|Token Access| CloudServices
 ```
