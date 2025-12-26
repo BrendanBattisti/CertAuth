@@ -201,3 +201,55 @@ flowchart LR
     Broker --> Keycloak
     Keycloak --> API
 ```
+
+## How This Helps Us
+
+This architecture provides clear benefits across three key use cases:
+
+### 1. Centralized Device Authentication
+
+- All device authentication flows (email, cloud uploads, internal tools) go through the **mTLS Token Broker**.
+- Eliminates per-service credential management on devices.
+- Enables unified audit logging and centralized policy enforcement.
+
+### 2. App-Level Delegation for CCF Applications
+
+- Applications on devices (e.g., CCF apps) can request scoped tokens using **device certificates** instead of embedding secrets.
+- Reduces risk of secret leakage and simplifies onboarding of apps.
+- Access control is delegated to Keycloak, keeping apps lightweight and secure.
+
+### 3. Federated Credentials for Customer Apps
+
+- Customers can run their internal apps on our devices without sharing their credentials with the device.
+- The token broker and Keycloak handle **federated authentication**, issuing tokens scoped to the customer’s identity and permissions.
+- Ensures separation of trust: our device never sees the user’s raw credentials.
+
+### Integrated Flow Diagram
+
+```mermaid
+flowchart TB
+    subgraph Devices["Managed Devices"]
+        Device["Device\n(Private Key + Cert)"]
+        CCFApp["CCF Application"]
+        CustomerApp["Customer App"]
+    end
+
+    Broker["mTLS Token Broker\n(Device Auth)"]
+    IdP["Keycloak\n(Token Issuer)"]
+    CloudServices["Cloud Services & Internal Tools"]
+
+    %% Centralized Device Authentication
+    Device -->|mTLS Auth| Broker
+    Broker -->|JWT Tokens| Device
+    Device -->|Token Access| CloudServices
+
+    %% App-Level Delegation
+    CCFApp -->|Uses Device Cert to Request Token| Broker
+    Broker -->|Scoped Token| CCFApp
+    CCFApp -->|Token Access| CloudServices
+
+    %% Federated Credentials
+    CustomerApp -->|Federated Login| Broker
+    Broker -->|Customer-Scoped Token| CustomerApp
+    CustomerApp -->|Token Access| CloudServices
+```
